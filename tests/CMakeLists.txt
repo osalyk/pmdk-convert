@@ -4,7 +4,7 @@
 include(${CMAKE_SOURCE_DIR}/utils/utils.cmake)
 
 set(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/test
-	CACHE STRING "working directory for tests")
+	CACHE STRING "working diirectory for tests")
 
 option(TESTS_USE_FORCED_PMEM "let tests force enable or force disable use of optimized flush in libpmemobj (to speed them up)" OFF)
 
