@@ -104,9 +104,17 @@ function(execute_cdb SRC_VERSION SCENARIO)
 	endif()
 endfunction()
 
-function(test_intr_tx prepare_files)
-	set(curr_scenario 0)
-	set(last_scenario 9)
+function(test_intr_tx prepare_files curr_version next_version)
+	# libpmemobj allocator behaves differently than it behaves
+	# on newer versions. From libpmemobj allocator in version > 1.3
+	# behaves consistently so they may share a common scenario.
+	if(NOT curr_version GREATER "1.4")
+		set(curr_scenario 0)
+		set(last_scenario 7)
+	else()
+		set(curr_scenario 0)
+		set(last_scenario 9)
+	endif()
 
 	list(LENGTH VERSIONS num)
 	math(EXPR num "${num} - 1")
