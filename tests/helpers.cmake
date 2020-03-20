@@ -105,32 +105,37 @@ function(execute_cdb SRC_VERSION SCENARIO)
 endfunction()
 
 function(test_intr_tx prepare_files)
-	set(curr_scenario 0)
-	set(last_scenario 9)
-
+	# A libpmemobj allocator version <= 1.3 behaves differently
+	# than its newer versions. The libpmemobj allocator 1.4 and above
+	# behaves consistently so they may share common test scenarios.
+	set(index 1)
 	list(LENGTH VERSIONS num)
 	math(EXPR num "${num} - 1")
+	while(index LESS num)
+		list(GET VERSIONS ${index} curr_version)
+		math(EXPR next "${index} + 1")
+		list(GET VERSIONS ${next} next_version)
+		string(REPLACE "." "" curr_bin_version ${curr_version})
+		string(REPLACE "." "" next_bin_version ${next_version})
+		message(----------${curr_version}----currr)
+		message(----------${curr_bin_version}--------binnn)
+		if(NOT curr_version GREATER "1.4")
+			set(curr_scenario 0)
+			set(last_scenario 7)
+		else()
+			set(curr_scenario 0)
+			set(last_scenario 9)
+		endif()
 
-	while(NOT curr_scenario GREATER last_scenario)
-		prepare_files()
-		set(index 1)
+		lock_tx_intr()
 
-		while(index LESS num)
-			list(GET VERSIONS ${index} curr_version)
-
-			math(EXPR next "${index} + 1")
-			list(GET VERSIONS ${next} next_version)
-
-			string(REPLACE "." "" curr_bin_version ${curr_version})
-			string(REPLACE "." "" next_bin_version ${next_version})
-
+		while(NOT curr_scenario GREATER last_scenario)
+			prepare_files(${curr_bin_version})
 			if(next_version EQUAL "1.2")
 				set(mutex "-X;1.2-pmemmutex")
 			else()
 				unset(mutex)
 			endif()
-
-			lock_tx_intr()
 
 			if(WIN32)
 				execute_cdb(${curr_bin_version} ${curr_scenario})
@@ -169,12 +174,11 @@ function(test_intr_tx prepare_files)
 					${DIR}/pool${curr_bin_version}c vc ${curr_scenario})
 			endif()
 
-			unlock_tx_intr()
-
-			MATH(EXPR index "${index} + 1")
+			MATH(EXPR curr_scenario "${curr_scenario} + 1")
 		endwhile()
 
-		MATH(EXPR curr_scenario "${curr_scenario} + 1")
+		unlock_tx_intr()
+		MATH(EXPR index "${index} + 1")
 	endwhile()
 endfunction()
 
